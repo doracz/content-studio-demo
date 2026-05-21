@@ -28,13 +28,13 @@ In other words: it knows what it doesn't know. That sounds obvious, but it's the
 
 ## How it's built
 
-Single-agent architecture using Claude Sonnet 4. One system prompt routes between five output schemas based on the task selected. Structured JSON output means every result is consistent, machine-readable, and ready to feed into downstream tools or workflows.
+Single-agent architecture using Claude Sonnet 4.6. One system prompt routes between five output schemas based on the task selected. Structured JSON output means every result is consistent, machine-readable, and ready to feed into downstream tools or workflows.
 
 Deployed on Vercel with a serverless API proxy that keeps the API key secure on the server side, never exposed to the browser.
 
 ## Live demo
 
-Try it at [your-vercel-url].
+[Open Content Studio →](https://content-studio-demo-dora-czernas-projects.vercel.app/)
 
 ## Credits
 
