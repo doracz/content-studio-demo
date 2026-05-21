@@ -237,15 +237,6 @@ textarea.content-input:focus {
   text-align: center;
 }
 
-.output-panel.loading-state {
-  border-color: transparent;
-  background:
-    linear-gradient(var(--bg-surface), var(--bg-surface)) padding-box,
-    conic-gradient(from var(--angle), #9333EA, #EC4899, #9333EA) border-box;
-  border: 2px solid transparent;
-  animation: rotate-gradient 3s linear infinite;
-}
-
 @property --angle {
   syntax: '<angle>';
   initial-value: 0deg;
@@ -256,6 +247,14 @@ textarea.content-input:focus {
   to {
     --angle: 360deg;
   }
+}
+
+.output-panel.loading-state {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--bg-surface), var(--bg-surface)) padding-box,
+    conic-gradient(from var(--angle), #9333EA, #EC4899, #9333EA, #EC4899, #9333EA) border-box;
+  animation: rotate-gradient 3s linear infinite;
 }
 
 .output-section {
