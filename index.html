@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Studio</title>
+<style>
+:root {
+  --bg-page: #F7F8FA;
+  --bg-surface: #FFFFFF;
+  --bg-muted: #F7F8FA;
+  --border: #E5E7EB;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B7280;
+  --text-placeholder: #9CA3AF;
+  --accent: #9333EA;
+  --accent-soft-bg: #F3E8FF;
+  --accent-soft-border: #E9D5FF;
+  --accent-soft-text: #7E22CE;
+  --gradient: linear-gradient(135deg, #9333EA 0%, #EC4899 100%);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-pill: 100px;
+  --shadow-focus: 0 0 0 3px rgba(147, 51, 234, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 32px 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px 0;
+}
+
+.header .tagline {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.section-spacing {
+  margin-top: 28px;
+}
+
+textarea.content-input {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  min-height: 180px;
+  resize: vertical;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+textarea.content-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+textarea.content-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+
+.task-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.task-button {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.task-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.task-button.active {
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  border-color: var(--accent-soft-border);
+}
+
+.example-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.example-link {
+  font-size: 14px;
+  color: var(--accent);
+  padding: 6px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  width: fit-content;
+}
+
+.example-link:hover {
+  color: #7E22CE;
+}
+
+.generate-button {
+  background: var(--gradient);
+  color: #FFFFFF;
+  border: none;
+  padding: 14px 24px;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 28px;
+  width: 100%;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.generate-button:hover:not(:disabled) {
+  opacity: 0.95;
+}
+
+.generate-button:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.generate-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.output-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  min-height: 400px;
+}
+
+.output-panel.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-align: center;
+}
+
+.output-section {
+  margin-bottom: 22px;
+}
+
+.output-section:last-child {
+  margin-bottom: 0;
+}
+
+.output-section-divider {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.output-body {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.output-body ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.output-body li {
+  margin-bottom: 6px;
+}
+
+.gradient-label {
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.asset-card {
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.asset-card:last-child {
+  margin-bottom: 0;
+}
+
+.asset-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.asset-body strong {
+  font-weight: 500;
+}
+
+.asset-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.tag {
+  display: inline-block;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.error {
+  color: #DC2626;
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 14px;
+}
+
+.unknowns-block {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.unknowns-block .gradient-label {
+  background: #92400E;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Content Studio</h1>
+    <p class="tagline">A multi-use content tool for writers, editors, and content marketers</p>
+  </div>
+
+  <div class="grid">
+
+    <div class="input-column">
+      <div class="label">Your content</div>
+      <textarea id="content-input" class="content-input" placeholder="Paste a draft, a long-form article, a technical paragraph, or anything you want to repurpose, simplify, optimise, or transform..."></textarea>
+
+      <div class="label section-spacing">Choose a task</div>
+      <div class="task-buttons" id="task-buttons">
+        <button class="task-button" data-task="repurpose">Repurpose</button>
+        <button class="task-button" data-task="simplify">Simplify</button>
+        <button class="task-button" data-task="optimise">Optimise for SEO</button>
+        <button class="task-button" data-task="match_voice">Match brand voice</button>
+        <button class="task-button" data-task="find_angles">Find story angles</button>
+      </div>
+
+      <div class="label section-spacing">Or try an example</div>
+      <div class="example-links">
+        <button class="example-link" data-example="repurpose">Webinar transcript &mdash; Repurpose</button>
+        <button class="example-link" data-example="simplify">Insurance underwriting jargon &mdash; Simplify</button>
+        <button class="example-link" data-example="optimise">Landing page &mdash; Optimise for SEO</button>
+        <button class="example-link" data-example="match_voice">Corporate paragraph &mdash; Match brand voice</button>
+        <button class="example-link" data-example="find_angles">Product launch announcement &mdash; Find story angles</button>
+      </div>
+
+      <button id="generate-button" class="generate-button" disabled>Generate &rarr;</button>
+    </div>
+
+    <div class="output-column">
+      <div class="label">Result</div>
+      <div id="output-panel" class="output-panel empty">
+        Choose a task and paste content (or click an example) to see results.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const examples = {
+  repurpose: {
+    content: `Our State of Hybrid Work 2026 report surveyed 3,400 knowledge workers across the UK, US, and EU. Key findings:
+
+- 73% of employees cite unclear priorities as their top stressor, ahead of workload (61%) or commute (44%)
+- Managers underestimate their team's workload by 40% on average, with senior managers showing the biggest blind spots
+- Recovery time correlates more strongly with autonomy than hours worked. Employees who can choose their schedule report 2.3x faster recovery from busy periods
+- The biggest predictor of retention is "clarity of expectations" — even ahead of compensation in our regression model
+- Companies with weekly 1:1s show 31% lower burnout rates than those with monthly or ad-hoc cadences
+
+Implications for managers: Workload management isn't enough on its own. Without clarity on priorities, even reasonable hours feel overwhelming. The data suggests three interventions: weekly priority resets, explicit deprioritisation conversations, and giving teams autonomy over how (not just what) work gets done.`,
+    task: 'repurpose'
+  },
+  simplify: {
+    content: `The underwriter's risk appetite is calibrated using a combination of actuarial loss ratios, exposure-adjusted premium yields, and reinsurance treaty constraints. Quota share arrangements typically cede 30-50% of gross written premium, with corresponding ceding commissions negotiated against five-year loss development triangles. Excess of loss treaties protect against catastrophic accumulation, with attachment points typically set above the 95th percentile of expected annual losses. Modern portfolios increasingly incorporate parametric triggers and ILS instruments to manage tail risk outside traditional reinsurance markets.`,
+    task: 'simplify',
+    extraContext: 'Target audience: small business owners with no insurance industry background.'
+  },
+  optimise: {
+    content: `Choosing the Right CRM for Small Business
+
+If you run a small business, you've probably thought about using a CRM. CRMs help you manage customer relationships. There are many CRMs out there. Some are expensive, some are free. Some have lots of features, some are simple. In this article we'll look at what to consider when choosing a CRM for your small business. We'll talk about features, pricing, ease of use, and integrations. By the end you'll have a better idea of which CRM is right for you.`,
+    task: 'optimise',
+    extraContext: 'Target keywords: best CRM for small business, small business CRM 2026, easy to use CRM. Page goal: organic traffic and qualified leads from SMB owners researching their first CRM.'
+  },
+  match_voice: {
+    content: `We are pleased to announce the launch of our new automated invoice processing solution. This product leverages artificial intelligence to reduce manual processing time and improve accuracy. Customers can expect significant operational efficiencies and a faster reconciliation cycle. Please contact your account manager for further information.`,
+    task: 'match_voice',
+    extraContext: 'Target brand voice: warm, plain-spoken, slightly irreverent. Talk to customers like a smart friend, not a corporate communications department. Use contractions. Avoid jargon. Be specific, not vague.'
+  },
+  find_angles: {
+    content: `Loftly is launching its new pet-tracking smart collar this autumn. The collar uses ultra-wideband (UWB) positioning to give 10cm location accuracy indoors, where GPS-based trackers fail. It runs for 14 days on a charge and can detect five activity states: resting, walking, running, playing, and stationary-alert (when a dog freezes, often a sign of pain or anxiety). The team built it after the founder's elderly retriever, Maple, kept getting lost in their own home during episodes of canine cognitive dysfunction. The collar is priced at £179 and the app is free. Beta testers reported finding their pets 4.2x faster on average than with previous GPS collars.`,
+    task: 'find_angles',
+    extraContext: 'Marketing team needs angles for press, social, and email launch.'
+  }
+};
+
+let selectedTask = null;
+let currentExampleContext = null;
+
+const contentInput = document.getElementById('content-input');
+const taskButtons = document.querySelectorAll('.task-button');
+const exampleLinks = document.querySelectorAll('.example-link');
+const generateButton = document.getElementById('generate-button');
+const outputPanel = document.getElementById('output-panel');
+
+function updateGenerateButton() {
+  generateButton.disabled = !selectedTask || !contentInput.value.trim();
+}
+
+taskButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    taskButtons.forEach(b => b.classList.remove('active'));
+    button.classList.add('active');
+    selectedTask = button.dataset.task;
+    updateGenerateButton();
+  });
+});
+
+exampleLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    const example = examples[link.dataset.example];
+    contentInput.value = example.content;
+    currentExampleContext = example.extraContext || null;
+
+    taskButtons.forEach(b => {
+      if (b.dataset.task === example.task) {
+        b.classList.add('active');
+        selectedTask = example.task;
+      } else {
+        b.classList.remove('active');
+      }
+    });
+
+    updateGenerateButton();
+  });
+});
+
+contentInput.addEventListener('input', () => {
+  currentExampleContext = null;
+  updateGenerateButton();
+});
+
+generateButton.addEventListener('click', async () => {
+  if (!selectedTask || !contentInput.value.trim()) return;
+
+  outputPanel.classList.remove('empty');
+  outputPanel.innerHTML = `
+    <div class="loading">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <span>Thinking...</span>
+    </div>
+  `;
+
+  generateButton.disabled = true;
+
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: contentInput.value,
+        task: selectedTask,
+        extra_context: currentExampleContext
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Request failed');
+    }
+
+    const data = await response.json();
+    renderOutput(data.output);
+  } catch (error) {
+    outputPanel.innerHTML = `<div class="error">Error: ${escapeHtml(error.message)}</div>`;
+  } finally {
+    generateButton.disabled = false;
+    updateGenerateButton();
+  }
+});
+
+function escapeHtml(text) {
+  if (text == null) return '';
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
+}
+
+function renderUnknowns(unknowns) {
+  if (!unknowns || !unknowns.length) return '';
+  return `
+    <div class="unknowns-block fade-in">
+      <div class="gradient-label">Things to clarify</div>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+        ${unknowns.map(u => `<li>${escapeHtml(u)}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+function renderOutput(output) {
+  if (!output) {
+    outputPanel.innerHTML = '<div class="error">No output received.</div>';
+    return;
+  }
+
+  if (output.error) {
+    outputPanel.innerHTML = `<div class="error">${escapeHtml(output.error)}</div>`;
+    return;
+  }
+
+  const renderers = {
+    repurpose: renderRepurpose,
+    simplify: renderSimplify,
+    optimise: renderOptimise,
+    match_voice: renderMatchVoice,
+    find_angles: renderFindAngles
+  };
+
+  const renderer = renderers[output.task];
+  if (!renderer) {
+    outputPanel.innerHTML = '<div class="error">Unknown task type.</div>';
+    return;
+  }
+
+  outputPanel.innerHTML = renderer(output);
+}
+
+function renderRepurpose(output) {
+  return `
+    <div class="fade-in">
+      <div class="output-section">
+        <div class="label">Source summary</div>
+        <div class="output-body">${escapeHtml(output.source_summary || '')}</div>
+      </div>
+
+      <div class="output-section">
+        <div class="label">Key insights</div>
+        <div class="output-body">
+          <ul>
+            ${(output.key_insights || []).map(i => `<li>${escapeHtml(i)}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+
+      <div class="output-section output-section-divider">
+        <div class="label">Atomised assets</div>
+        ${(output.atomised_assets || []).map(asset => `
+          <div class="asset-card">
+            <div class="gradient-label">${escapeHtml(asset.channel)} &mdash; ${escapeHtml(asset.format)}</div>
+            ${asset.title ? `<div class="asset-body"><strong>Title:</strong> ${escapeHtml(asset.title)}</div>` : ''}
+            ${asset.hook ? `<div class="asset-body" style="margin-top:6px;"><strong>Hook:</strong> ${escapeHtml(asset.hook)}</div>` : ''}
+            ${asset.subject_line_suggestion ? `<div class="asset-body" style="margin-top:6px;"><strong>Subject:</strong> ${escapeHtml(asset.subject_line_suggestion)}</div>` : ''}
+            ${asset.content ? `<div class="asset-body" style="margin-top:8px;">${escapeHtml(asset.content)}</div>` : ''}
+            ${asset.meta_description ? `<div class="asset-meta"><strong>Meta:</strong> ${escapeHtml(asset.meta_description)}</div>` : ''}
+            ${asset.summary ? `<div class="asset-body" style="margin-top:6px;">${escapeHtml(asset.summary)}</div>` : ''}
+            ${asset.cta ? `<div class="asset-meta"><strong>CTA:</strong> ${escapeHtml(asset.cta)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+
+      ${renderUnknowns(output.unknowns)}
+    </div>
+  `;
+}
+
+function renderSimplify(output) {
+  return `
+    <div class="fade-in">
+      <div class="output-section">
+        <div class="label">Target audience</div>
+        <div class="output-body">${escapeHtml(output.target_audience || '')}</div>
+      </div>
+
+      <div class="output-section">
+        <div class="label">Complexity assessment</div>
+        <div class="output-body">${escapeHtml(output.complexity_assessment || '')}</div>
+      </div>
+
+      ${output.jargon_flagged && output.jargon_flagged.length ? `
+        <div class="output-section">
+          <div class="label">Jargon flagged</div>
+          <div>
+            ${output.jargon_flagged.map(j => `<span class="tag">${escapeHtml(j)}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="output-section output-section-divider">
+        <div class="gradient-label">Accessible version</div>
+        <div class="asset-card">
+          <div class="asset-body">${escapeHtml(output.accessible_version || '')}</div>
+        </div>
+      </div>
+
+      ${output.key_concepts_preserved && output.key_concepts_preserved.length ? `
+        <div class="output-section">
+          <div class="label">Key concepts preserved</div>
+          <div class="output-body">
+            <ul>${output.key_concepts_preserved.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      ` : ''}
+
+      ${output.concepts_lost_or_simplified && output.concepts_lost_or_simplified.length ? `
+        <div class="output-section">
+          <div class="label">Concepts simplified or lost</div>
+          <div class="output-body">
+            <ul>${output.concepts_lost_or_simplified.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      ` : ''}
+
+      ${output.compliance_flags && output.compliance_flags.length ? `
+        <div class="output-section">
+          <div class="label">Compliance flags</div>
+          <div class="output-body">
+            <ul>${output.compliance_flags.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      ` : ''}
+
+      ${renderUnknowns(output.unknowns)}
+    </div>
+  `;
+}
+
+function renderOptimise(output) {
+  const onPage = output.on_page_recommendations || {};
+  const aeo = output.aeo_recommendations || {};
+
+  return `
+    <div class="fade-in">
+      <div class="output-section">
+        <div class="label">Target keywords</div>
+        <div>
+          ${(output.target_keywords || []).map(k => `<span class="tag">${escapeHtml(k)}</span>`).join('')}
+        </div>
+      </div>
+
+      ${output.current_strengths && output.current_strengths.length ? `
+        <div class="output-section">
+          <div class="label">Current strengths</div>
+          <div class="output-body">
+            <ul>${output.current_strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="output-section output-section-divider">
+        <div class="gradient-label">On-page recommendations</div>
+        <div class="asset-card">
+          ${onPage.title_tag ? `<div class="asset-body"><strong>Title tag:</strong> ${escapeHtml(onPage.title_tag)}</div>` : ''}
+          ${onPage.meta_description ? `<div class="asset-body" style="margin-top:6px;"><strong>Meta description:</strong> ${escapeHtml(onPage.meta_description)}</div>` : ''}
+          ${onPage.h1 ? `<div class="asset-body" style="margin-top:6px;"><strong>H1:</strong> ${escapeHtml(onPage.h1)}</div>` : ''}
+          ${onPage.h2_structure && onPage.h2_structure.length ? `
+            <div class="asset-body" style="margin-top:8px;"><strong>H2 structure:</strong></div>
+            <ul style="margin: 4px 0 0 0; padding-left: 20px; font-size: 14px;">
+              ${onPage.h2_structure.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
+            </ul>
+          ` : ''}
+          ${onPage.internal_linking_opportunities && onPage.internal_linking_opportunities.length ? `
+            <div class="asset-body" style="margin-top:8px;"><strong>Internal linking:</strong></div>
+            <ul style="margin: 4px 0 0 0; padding-left: 20px; font-size: 14px;">
+              ${onPage.internal_linking_opportunities.map(l => `<li>${escapeHtml(l)}</li>`).join('')}
+            </ul>
+          ` : ''}
+        </div>
+      </div>
+
+      <div class="output-section">
+        <div class="gradient-label">AEO recommendations</div>
+        <div class="asset-card">
+          ${aeo.answer_engine_summary ? `<div class="asset-body"><strong>Answer-ready summary:</strong> ${escapeHtml(aeo.answer_engine_summary)}</div>` : ''}
+          ${aeo.structured_data_suggestion ? `<div class="asset-body" style="margin-top:6px;"><strong>Structured data:</strong> ${escapeHtml(aeo.structured_data_suggestion)}</div>` : ''}
+          ${aeo.question_format_opportunities && aeo.question_format_opportunities.length ? `
+            <div class="asset-body" style="margin-top:8px;"><strong>Questions to answer directly:</strong></div>
+            <ul style="margin: 4px 0 0 0; padding-left: 20px; font-size: 14px;">
+              ${aeo.question_format_opportunities.map(q => `<li>${escapeHtml(q)}</li>`).join('')}
+            </ul>
+          ` : ''}
+        </div>
+      </div>
+
+      ${output.rewrite_suggestions && output.rewrite_suggestions.length ? `
+        <div class="output-section">
+          <div class="label">Rewrite suggestions</div>
+          <div class="output-body">
+            <ul>${output.rewrite_suggestions.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      ` : ''}
+
+      ${renderUnknowns(output.unknowns)}
+    </div>
+  `;
+}
+
+function renderMatchVoice(output) {
+  return `
+    <div class="fade-in">
+      <div class="output-section">
+        <div class="label">Voice profile</div>
+        <div class="output-body">${escapeHtml(output.voice_profile || '')}</div>
+      </div>
+
+      ${output.voice_characteristics && output.voice_characteristics.length ? `
+        <div class="output-section">
+          <div class="label">Voice characteristics</div>
+          <div>
+            ${output.voice_characteristics.map(c => `<span class="tag">${escapeHtml(c)}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="output-section output-section-divider">
+        <div class="gradient-label">Transformed content</div>
+        <div class="asset-card">
+          <div class="asset-body">${escapeHtml(output.transformed_content || '')}</div>
+        </div>
+      </div>
+
+      ${output.voice_choices_annotated && output.voice_choices_annotated.length ? `
+        <div class="output-section">
+          <div class="label">Voice choices</div>
+          ${output.voice_choices_annotated.map(choice => `
+            <div class="asset-card">
+              <div class="asset-body"><strong>Original:</strong> ${escapeHtml(choice.original)}</div>
+              <div class="asset-body" style="margin-top:6px;"><strong>Transformed:</strong> ${escapeHtml(choice.transformed)}</div>
+              <div class="asset-meta">${escapeHtml(choice.reasoning)}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${output.consistency_notes && output.consistency_notes.length ? `
+        <div class="output-section">
+          <div class="label">Consistency notes</div>
+          <div class="output-body">
+            <ul>${output.consistency_notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      ` : ''}
+
+      ${renderUnknowns(output.unknowns)}
+    </div>
+  `;
+}
+
+function renderFindAngles(output) {
+  return `
+    <div class="fade-in">
+      <div class="output-section">
+        <div class="label">Source summary</div>
+        <div class="output-body">${escapeHtml(output.source_summary || '')}</div>
+      </div>
+
+      <div class="output-section">
+        <div class="label">Core subject</div>
+        <div class="output-body">${escapeHtml(output.core_subject || '')}</div>
+      </div>
+
+      <div class="output-section output-section-divider">
+        <div class="label">Angles</div>
+        ${(output.angles || []).map((angle, i) => `
+          <div class="asset-card">
+            <div class="gradient-label">Angle ${i + 1} &mdash; ${escapeHtml(angle.tone || '')}</div>
+            <div class="asset-body"><strong>${escapeHtml(angle.title || '')}</strong></div>
+            <div class="asset-body" style="margin-top:6px;"><strong>Hook:</strong> ${escapeHtml(angle.hook || '')}</div>
+            <div class="asset-body" style="margin-top:6px;"><strong>Audience:</strong> ${escapeHtml(angle.audience || '')}</div>
+            <div class="asset-body" style="margin-top:6px;"><strong>Channel:</strong> ${escapeHtml(angle.channel_recommendation || '')}</div>
+            <div class="asset-meta">${escapeHtml(angle.key_insight || '')}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      ${output.strongest_angle ? `
+        <div class="output-section">
+          <div class="gradient-label">Strongest angle</div>
+          <div class="output-body">${escapeHtml(output.strongest_angle)}</div>
+        </div>
+      ` : ''}
+
+      ${renderUnknowns(output.unknowns)}
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
