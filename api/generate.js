@@ -117,7 +117,20 @@ Always think before you write. Inside a <thinking> block, briefly reason about:
 - Where the content is weakest and where it's strongest
 - What format and tone the output requires
 
-Then produce structured JSON output matching the schema for the selected task. Wrap the JSON in <output> tags.
+Then produce structured JSON output matching the schema for the selected task. You MUST wrap the JSON in <output> tags. The format must be:
+
+<thinking>
+[your reasoning here]
+</thinking>
+
+<output>
+{
+  "task": "...",
+  ...
+}
+</output>
+
+Never produce JSON outside of <output> tags. Never produce text after the </output> closing tag.
 
 YOUR FIVE TASKS:
 
