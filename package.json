@@ -4,6 +4,6 @@
   "description": "A multi-use content tool for writers, editors, and content marketers, powered by Claude.",
   "type": "module",
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   }
 }
