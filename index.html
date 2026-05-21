@@ -530,7 +530,7 @@ generateButton.addEventListener('click', async () => {
       <div class="loading-dot"></div>
       <div class="loading-dot"></div>
       <div class="loading-dot"></div>
-      <span>Thinking...</span>
+      <span id="loading-status">Thinking...</span>
     </div>
   `;
 
@@ -548,12 +548,54 @@ generateButton.addEventListener('click', async () => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
       throw new Error(errorData.error || 'Request failed');
     }
 
-    const data = await response.json();
-    renderOutput(data.output);
+    // Read the streaming response
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let accumulatedText = '';
+    let charCount = 0;
+    const loadingStatus = document.getElementById('loading-status');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (!data || data === '[DONE]') continue;
+
+          try {
+            const event = JSON.parse(data);
+            if (event.type === 'content_block_delta' && event.delta?.text) {
+              accumulatedText += event.delta.text;
+              charCount = accumulatedText.length;
+              if (loadingStatus) {
+                if (accumulatedText.includes('<output>')) {
+                  loadingStatus.textContent = 'Structuring the response...';
+                } else if (accumulatedText.includes('<thinking>')) {
+                  loadingStatus.textContent = `Thinking... (${charCount} characters)`;
+                } else {
+                  loadingStatus.textContent = `Working... (${charCount} characters)`;
+                }
+              }
+            }
+          } catch {
+            // Skip lines that aren't valid JSON
+          }
+        }
+      }
+    }
+
+    // Once streaming completes, parse the full response
+    const parsed = parseResponse(accumulatedText);
+    renderOutput(parsed.output);
   } catch (error) {
     outputPanel.innerHTML = `<div class="error">Error: ${escapeHtml(error.message)}</div>`;
   } finally {
@@ -561,6 +603,25 @@ generateButton.addEventListener('click', async () => {
     updateGenerateButton();
   }
 });
+
+function parseResponse(text) {
+  const outputMatch = text.match(/<output>([\s\S]*?)<\/output>/);
+  let output = null;
+
+  if (outputMatch) {
+    try {
+      let jsonStr = outputMatch[1].trim();
+      jsonStr = jsonStr.replace(/^```json\s*/, '').replace(/```\s*$/, '');
+      output = JSON.parse(jsonStr);
+    } catch (e) {
+      output = { error: 'Failed to parse output: ' + e.message };
+    }
+  } else {
+    output = { error: 'No output block found in response' };
+  }
+
+  return { output, raw: text };
+}
 
 function escapeHtml(text) {
   if (text == null) return '';
