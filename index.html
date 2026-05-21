@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
 <title>Content Studio</title>
 <style>
 :root {
@@ -14,8 +15,8 @@
   --text-secondary: #4B5563;
   --text-placeholder: #6B7280;
   --accent: #9333EA;
-  --accent-soft-bg: #F3E8FF;
-  --accent-soft-border: #E9D5FF;
+  --accent-soft-bg: #F9F4FF;
+  --accent-soft-border: #EDDFFF;
   --accent-soft-text: #7E22CE;
   --gradient: linear-gradient(135deg, #9333EA 0%, #EC4899 100%);
   --radius-sm: 6px;
@@ -224,6 +225,7 @@ textarea.content-input:focus {
   border-radius: var(--radius-md);
   padding: 22px;
   min-height: 400px;
+  position: relative;
 }
 
 .output-panel.empty {
@@ -233,6 +235,27 @@ textarea.content-input:focus {
   color: var(--text-secondary);
   font-size: 16px;
   text-align: center;
+}
+
+.output-panel.loading-state {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--bg-surface), var(--bg-surface)) padding-box,
+    conic-gradient(from var(--angle), #9333EA, #EC4899, #9333EA) border-box;
+  border: 2px solid transparent;
+  animation: rotate-gradient 3s linear infinite;
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate-gradient {
+  to {
+    --angle: 360deg;
+  }
 }
 
 .output-section {
@@ -531,6 +554,7 @@ generateButton.addEventListener('click', async () => {
   if (!selectedTask || !contentInput.value.trim()) return;
 
   outputPanel.classList.remove('empty');
+  outputPanel.classList.add('loading-state');
   outputPanel.innerHTML = `
     <div class="loading">
       <div class="loading-dot"></div>
@@ -541,6 +565,13 @@ generateButton.addEventListener('click', async () => {
   `;
 
   generateButton.disabled = true;
+
+  // On mobile (under 900px), scroll the result into view so the user sees progress
+  if (window.innerWidth <= 900) {
+    setTimeout(() => {
+      outputPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
 
   try {
     const response = await fetch('/api/generate', {
@@ -631,6 +662,7 @@ generateButton.addEventListener('click', async () => {
   } catch (error) {
     outputPanel.innerHTML = `<div class="error">Error: ${escapeHtml(error.message)}</div>`;
   } finally {
+    outputPanel.classList.remove('loading-state');
     generateButton.disabled = false;
     updateGenerateButton();
   }
