@@ -65,7 +65,7 @@ body::after {
 }
 
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 48px;
 }
 
 .header h1 {
@@ -613,34 +613,46 @@ generateButton.addEventListener('click', async () => {
 function parseResponse(text) {
   let output = null;
   let jsonStr = null;
+  let attemptSource = null;
 
   // First try: extract JSON from <output> tags
   const outputMatch = text.match(/<output>([\s\S]*?)<\/output>/);
   if (outputMatch) {
     jsonStr = outputMatch[1].trim();
+    attemptSource = 'output_tags';
   } else {
     // Fallback: look for JSON anywhere in the response after </thinking>
     const afterThinking = text.split('</thinking>')[1] || text;
-    // Find the first { and the last } to extract a JSON block
     const firstBrace = afterThinking.indexOf('{');
     const lastBrace = afterThinking.lastIndexOf('}');
     if (firstBrace !== -1 && lastBrace > firstBrace) {
       jsonStr = afterThinking.substring(firstBrace, lastBrace + 1);
+      attemptSource = 'brace_extraction';
     }
   }
 
   if (jsonStr) {
     try {
-      // Strip any markdown code fences
       jsonStr = jsonStr.replace(/^```json\s*/, '').replace(/```\s*$/, '').trim();
       output = JSON.parse(jsonStr);
+      console.log('Parse succeeded via', attemptSource);
     } catch (e) {
-      console.error('JSON parse error:', e);
-      console.error('Attempted to parse:', jsonStr);
+      console.group('JSON parse failed');
+      console.error('Error:', e.message);
+      console.error('Source:', attemptSource);
+      console.error('Length of attempted JSON:', jsonStr.length);
+      console.error('First 500 chars:', jsonStr.substring(0, 500));
+      console.error('Last 500 chars:', jsonStr.substring(Math.max(0, jsonStr.length - 500)));
+      console.error('Full text length:', text.length);
+      console.error('Full text:', text);
+      console.groupEnd();
       output = { error: 'Failed to parse output. The model may have produced incomplete JSON. Try again.' };
     }
   } else {
-    console.error('No JSON found in response. Raw text:', text);
+    console.group('No JSON block found');
+    console.error('Full response length:', text.length);
+    console.error('Full response:', text);
+    console.groupEnd();
     output = { error: 'No output block found in response. Try again.' };
   }
 
