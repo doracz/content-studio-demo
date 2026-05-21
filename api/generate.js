@@ -1,43 +1,70 @@
-// Vercel serverless function: proxy to the Claude API
-// This keeps the API key secret (it's stored as a Vercel environment variable)
-// and handles CORS so the browser can call this endpoint.
+// Vercel serverless function: streaming proxy to the Claude API
+// Streams Claude's response back to the browser as Server-Sent Events,
+// so the function returns data continuously and doesn't hit the 60s timeout.
 
-export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export const config = {
+  runtime: 'edge'
+};
 
-  // Handle preflight requests
+export default async function handler(req) {
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
+    });
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
-  const { content, task, extra_context } = req.body;
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  const { content, task, extra_context } = body;
 
   if (!content || !task) {
-    return res.status(400).json({ error: 'Missing content or task' });
+    return new Response(JSON.stringify({ error: 'Missing content or task' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   const validTasks = ['repurpose', 'simplify', 'optimise', 'match_voice', 'find_angles'];
   if (!validTasks.includes(task)) {
-    return res.status(400).json({ error: 'Invalid task' });
+    return new Response(JSON.stringify({ error: 'Invalid task' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'API key not configured' });
+    return new Response(JSON.stringify({ error: 'API key not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   const systemPrompt = buildSystemPrompt();
   const userMessage = buildUserMessage(content, task, extra_context);
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,32 +74,37 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 4096,
+        stream: true,
         system: systemPrompt,
         messages: [
-          {
-            role: 'user',
-            content: userMessage
-          }
+          { role: 'user', content: userMessage }
         ]
       })
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API error:', errorText);
-      return res.status(response.status).json({ error: 'Anthropic API error', details: errorText });
+    if (!anthropicResponse.ok) {
+      const errorText = await anthropicResponse.text();
+      return new Response(JSON.stringify({ error: 'Anthropic API error', details: errorText }), {
+        status: anthropicResponse.status,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    const data = await response.json();
-    const responseText = data.content[0].text;
-
-    // Parse out the thinking block and JSON output
-    const parsed = parseResponse(responseText);
-
-    return res.status(200).json(parsed);
+    // Stream the response back to the client
+    return new Response(anthropicResponse.body, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   } catch (error) {
-    console.error('Server error:', error);
-    return res.status(500).json({ error: 'Server error', message: error.message });
+    return new Response(JSON.stringify({ error: 'Server error', message: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
@@ -230,26 +262,4 @@ function buildUserMessage(content, task, extraContext) {
   message += `SOURCE CONTENT:\n<source>\n${content}\n</source>\n\nProduce your <thinking> block, then the JSON output wrapped in <output> tags.`;
 
   return message;
-}
-
-function parseResponse(text) {
-  const thinkingMatch = text.match(/<thinking>([\s\S]*?)<\/thinking>/);
-  const outputMatch = text.match(/<output>([\s\S]*?)<\/output>/);
-
-  const thinking = thinkingMatch ? thinkingMatch[1].trim() : null;
-  let output = null;
-
-  if (outputMatch) {
-    try {
-      // Strip any markdown code fences from inside the output tags
-      let jsonStr = outputMatch[1].trim();
-      jsonStr = jsonStr.replace(/^```json\s*/, '').replace(/```\s*$/, '');
-      output = JSON.parse(jsonStr);
-    } catch (e) {
-      console.error('Failed to parse JSON:', e);
-      output = { error: 'Failed to parse output', raw: outputMatch[1] };
-    }
-  }
-
-  return { thinking, output, raw: text };
 }
