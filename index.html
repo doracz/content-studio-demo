@@ -890,7 +890,7 @@ function renderOptimise(output) {
 
       ${output.rewrite_suggestions && output.rewrite_suggestions.length ? `
         <div class="output-section">
-          <div class="label">Rewrite suggestions</div>
+          <div class="gradient-label">Rewrite suggestions</div>
           <div class="output-body">
             <ul>${output.rewrite_suggestions.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
           </div>
@@ -928,7 +928,7 @@ function renderMatchVoice(output) {
 
       ${output.voice_choices_annotated && output.voice_choices_annotated.length ? `
         <div class="output-section">
-          <div class="label">Voice choices</div>
+          <div class="gradient-label">Voice choices</div>
           ${output.voice_choices_annotated.map(choice => `
             <div class="asset-card">
               <div class="asset-body"><strong>Original:</strong> ${escapeHtml(choice.original)}</div>
