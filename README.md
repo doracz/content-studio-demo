@@ -34,7 +34,7 @@ Deployed on Vercel with a serverless API proxy that keeps the API key secure on 
 
 ## Live demo
 
-[Open Content Studio →](https://content-studio-demo-dora-czernas-projects.vercel.app/)
+[Open Content Studio →](https://content-studio-demo.vercel.app/)
 
 ## Credits
 
